@@ -10,18 +10,17 @@ Flight::register('db', 'PDO', array('mysql:host=localhost;port=3306;dbname=weeca
 Flight::register('albums', 'albums');
 Flight::register('albumsModel', 'albumsodel');
 
-Flight::route('/', function(){
-	phpinfo();
-    echo 'hello world!';
-});
-
-Flight::route('GET /albums', function(){
+Flight::route('GET /albums/(@id)', function($id){
 	
-    $albums = Flight::albums()->getAlbums();
+	$request = Flight::request();
+	$params = [];
+	parse_str(parse_url($request->url, PHP_URL_QUERY), $params);
+	print_r($id);
+    $albums = Flight::albums()->getAlbums($id, $params);
     
     Flight::json($albums, 200);
 
-});
+}, true);
 
 Flight::route('POST /albums/load', function(){
 	

@@ -13,9 +13,9 @@ class Albums
      *
      * @return array
      */
-    public function getAlbums()
+    public function getAlbums($id, $params)
     {
-        return $this->albums->getAlbums();
+        return $this->albums->getAlbums($id, $params);
         
     }
     

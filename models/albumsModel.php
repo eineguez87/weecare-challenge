@@ -11,19 +11,46 @@ class AlbumsModel
 
     /**
      * Method to get albums from url.
+     * @id int Optional. Is the album id.
+     * @params mixed Array of params that can be passed for order and limit.
      * @return array
      */
-    public function getAlbums()
+    public function getAlbums($id = null, $params)
     {
         
-        $json = file_get_contents('https://itunes.apple.com/us/rss/topalbums/limit=10/json');
+        $where = '';
+        if($id !== null) {
+			$where = 'WHERE album_id = '. $this->db->quote($id);
+		}
         
-        $albums = json_decode($json, true);
+        if(isset($params['order_col'])) {
+			switch($params['order_dir']) {
+				case 'asc':
+				case 'ascending':
+				    $direction = 'asc';
+				    break;
+				case 'desc':
+				case 'descending':
+				default:
+				    $direction = 'desc';
+			}
+			
+			$order = 'ORDER BY '. $this->db->quote($params['order_col']) . ' '. $direction;
+		} else {
+			$order = 'ORDER BY rank';
+		}
+		
+		if(isset($params['limit'])) {
+			$limit = 'LIMIT '. intval($params['limit']);
+		} else {
+			$limit = '';
+		}
+		$sql = "SELECT * FROM albums {$where} {$order} {$limit}";
         
-        return $albums['feed']['entry'];
+        $result = $this->db->query($sql);
         
-        $result = $this->db->query("SELECT * FROM {$this->table}");
         $results = [];
+
         while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
             $results[] = $row;
         }
@@ -33,14 +60,18 @@ class AlbumsModel
     
     public function loadAlbums($count = 100)
     {
-		$json = file_get_contents('https://itunes.apple.com/us/rss/topalbums/limit=10/json');
+		$json = file_get_contents('https://itunes.apple.com/us/rss/topalbums/limit=100/json');
         
         $albums = json_decode($json, true);
+        $category_sql = "INSERT IGNORE INTO categories (name, category_id, link) VALUES (:name, :category_id, :link)";
+		$album_sql = "INSERT IGNORE INTO albums (album_id, name, artist, artist_link, category_id, release_date, rank) VALUES (:album_id, :name, :artist, :artist_link, :category_id, :release_date, :rank)";
+		$images_sql = "INSERT IGNORE INTO album_art (album_id, album_image, image_size) VALUES (:album_id, :album_image, :image_size)";
 
-        foreach($albums['feed']['entry'] as $album) {
+        foreach($albums['feed']['entry'] as $rank=>$album) {
 			
-			$sql = "INSERT IGNORE INTO categories (name, category_id, link) VALUES (:name, :category_id, :link)";
-			$stmt= $this->db->prepare($sql);
+			//Insterts categories
+			
+			$stmt= $this->db->prepare($category_sql);
 			
 			$data = [
 				'name' => $album['category']['attributes']['label'],
@@ -50,19 +81,38 @@ class AlbumsModel
 			
 			$stmt->execute($data);
 			
-			$sql = "INSERT INTO albums (name, artist_id, artist_link, category_id, release_date) VALUES (:name, :artist_id, :artist_link, :category_id, :release_date)";
-			$stmt= $this->db->prepare($sql);
+			//Insterts album info
+			
+			$stmt= $this->db->prepare($album_sql);
 			
 			$data = [
+				'album_id' => $album['id']['attributes']['im:id'],
 				'name' => $album['title']['label'],
 				'artist' => $album['im:artist']['label'],
 				'artist_link' => (isset($album['im:artist']['attributes'])) ? $album['im:artist']['attributes']['href'] : '',
 				'category_id' => $album['category']['attributes']['im:id'],
 				'release_date' => $album['im:releaseDate']['label'],
+				'rank' => $rank,
 			];
 			
 			$stmt->execute($data);
-			$id = $this->db->lastInsertId();
+			
+			//insterts album images
+			
+			$stmt= $this->db->prepare($images_sql);
+			
+			foreach($album['im:image'] as $image){
+				$data = [
+					'album_id' => $album['id']['attributes']['im:id'],
+					'album_image' => $image['label'],
+					'image_size' => $image['attributes']['height'],
+				];
+				
+				$stmt->execute($data);
+			}
+			
+			
+			
 		}
 		
 	}

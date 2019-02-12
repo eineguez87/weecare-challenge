@@ -4,7 +4,10 @@
 
 #API Documentation
 ---- 
-</albums/load/@id>
+</albums/@id>
+
+**Description**
+This will get albums.
 
 **METHOD**
 
@@ -48,3 +51,38 @@ Content: `[{    "album_id": "1350091548",
 					"link": "https://itunes.apple.com/us/genre/music-country/id6?uo=2"
 					}
 			}, ...]`
+			
+---- 
+</albums/load>
+
+**METHOD**
+
+`POST`
+
+**Description**
+This will reload the albums from the itunes json rss feed.
+
+**Success Response:**
+Code: 200 <br />
+Content: None
+
+---- 
+</albums/@id>
+
+**Description**
+This will delete an album based on its album id
+
+**METHOD**
+
+`DELETE`
+
+**Params**
+
+**REQUIRED:**<br>
+`id`<br>
+
+
+**Success Response:**
+Code: 200 <br />
+Content: none`
+			

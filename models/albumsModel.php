@@ -80,7 +80,11 @@ class AlbumsModel
         return $results;
     }
     
-    private function loadAlbums()
+    /**
+     * Method to refresh albums from url.
+     * 
+     */
+    public function loadAlbums()
     {
 		$json = file_get_contents('https://itunes.apple.com/us/rss/topalbums/limit=100/json');
         
@@ -137,10 +141,32 @@ class AlbumsModel
 				
 				$stmt->execute($data);
 			}
-			
-			
-			
 		}
+	}
+	
+	/**
+     * Method to get delete album by album id
+     * @id int Required. Is the album id.
+     */
+	public function deleteAlbum($id)
+	{
+		$sql = "DELETE FROM albums WHERE album_id = :album_id";
+		$stmt= $this->db->prepare($sql);
+			
+		$data = [
+			'album_id' => $id,
+		];
 		
+		$stmt->execute($data);
+		
+		//Lets also delete from album art
+		$sql = "DELETE FROM album_art WHERE album_id = :album_id";
+		$stmt= $this->db->prepare($sql);
+			
+		$data = [
+			'album_id' => $id,
+		];
+		
+		$stmt->execute($data);
 	}
 }

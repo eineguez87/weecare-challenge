@@ -22,9 +22,17 @@ Flight::route('GET /albums/(@id)', function($id){
 
 }, true);
 
-Flight::route('POST /albums/load', function(){
+Flight::route('DELETE /albums/@id', function($id){
+	
+    Flight::albums()->deleteAlbum($id);
+	Flight::response(200);
+
+});
+
+Flight::route('POST /albums/refresh', function(){
 	
     Flight::albums()->loadAlbums();
+    
 
 });
 

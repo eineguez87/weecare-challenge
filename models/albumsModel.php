@@ -52,13 +52,35 @@ class AlbumsModel
         $results = [];
 
         while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+			//Lets get album art.
+			$art_sql = "SELECT album_image, image_size FROM album_art WHERE album_id = " . $row['album_id'];
+        
+			$art_result = $this->db->query($art_sql);
+			while ($art = $art_result->fetch(PDO::FETCH_ASSOC)) {
+				unset($art['album_id']);
+				$row['art'][] = $art;
+			}
+			
+			//lets get category info as well
+			$cat_sql = "SELECT * FROM categories WHERE category_id = " . $row['category_id'] .' LIMIT 1';
+			$cat_result = $this->db->query($cat_sql);
+			$cat = $cat_result->fetch(PDO::FETCH_ASSOC);
+			$row['category'] = $cat;
+			
             $results[] = $row;
         }
+        
+        //if no results, lets load albums. 
+        if(empty($results)) {
+			$this->loadAlbums();
+			$this->getAlbums($id, $params);
+			exit;
+		}
 
         return $results;
     }
     
-    public function loadAlbums($count = 100)
+    private function loadAlbums()
     {
 		$json = file_get_contents('https://itunes.apple.com/us/rss/topalbums/limit=100/json');
         
@@ -66,6 +88,11 @@ class AlbumsModel
         $category_sql = "INSERT IGNORE INTO categories (name, category_id, link) VALUES (:name, :category_id, :link)";
 		$album_sql = "INSERT IGNORE INTO albums (album_id, name, artist, artist_link, category_id, release_date, rank) VALUES (:album_id, :name, :artist, :artist_link, :category_id, :release_date, :rank)";
 		$images_sql = "INSERT IGNORE INTO album_art (album_id, album_image, image_size) VALUES (:album_id, :album_image, :image_size)";
+
+		//Lets delete whatever is in these tables before adding to them.
+		$this->db->query("TRUNCATE TABLE albums");
+		$this->db->query("TRUNCATE TABLE categories");
+		$this->db->query("TRUNCATE TABLE album_art");
 
         foreach($albums['feed']['entry'] as $rank=>$album) {
 			

@@ -4,7 +4,7 @@
 
 #API Documentation
 ---- 
-</albums/@id>
+/albums/@id
 
 **Description**
 This will get albums.
@@ -53,7 +53,7 @@ Content: `[{    "album_id": "1350091548",
 			}, ...]`
 			
 ----
-</albums/refresh>
+/albums/refresh
 
 **METHOD**
 
@@ -67,7 +67,7 @@ Code: 200 <br />
 Content: None
 
 ---- 
-</albums/@id>
+/albums/@id
 
 **Description**
 This will delete an album based on its album id

@@ -52,8 +52,8 @@ Content: `[{    "album_id": "1350091548",
 					}
 			}, ...]`
 			
----- 
-</albums/load>
+----
+</albums/refresh>
 
 **METHOD**
 

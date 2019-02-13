@@ -17,6 +17,15 @@ class AlbumsModel
      */
     public function getAlbums($id = null, $params)
     {
+		
+		//Lets do a check to see if we have data. If not, then load albums.
+		$sql = "SELECT count(*) AS total FROM albums";
+        $result = $this->db->query($sql);
+        $total = $result->fetch(PDO::FETCH_ASSOC);
+        
+        if($total['total'] == 0) {
+			$this->loadAlbums();
+		}
         
         $where = '';
         if($id !== null) {
@@ -60,13 +69,6 @@ class AlbumsModel
 			
             $results[] = $row;
         }
-        
-        //if no results, lets load albums. 
-        if(empty($results)) {
-			$this->loadAlbums();
-			$this->getAlbums($id, $params);
-			exit;
-		}
 
         return $results;
     }
@@ -90,7 +92,6 @@ class AlbumsModel
         foreach($albums['feed']['entry'] as $rank=>$album) {
 			
 			//Insterts categories
-			
 			$stmt= $this->db->prepare($category_sql);
 			
 			$data = [
@@ -102,7 +103,6 @@ class AlbumsModel
 			$stmt->execute($data);
 			
 			//Insterts album info
-			
 			$stmt= $this->db->prepare($album_sql);
 			
 			$data = [
@@ -114,11 +114,10 @@ class AlbumsModel
 				'release_date' => $album['im:releaseDate']['label'],
 				'rank' => $rank,
 			];
-			
+
 			$stmt->execute($data);
 			
-			//insterts album images
-			
+			//inserts album images
 			$stmt= $this->db->prepare($images_sql);
 			
 			foreach($album['im:image'] as $image){
@@ -164,10 +163,11 @@ class AlbumsModel
 	 * 
 	 */
 	private function purgeTables()
-	{
+	{	
+		$this->db->query("DELETE FROM categories");
+		$this->db->query("DELETE FROM album_art");
 		$this->db->query("TRUNCATE TABLE albums");
-		$this->db->query("TRUNCATE TABLE categories");
-		$this->db->query("TRUNCATE TABLE album_art");
+		
 	}
 	
 	

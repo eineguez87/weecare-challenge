@@ -25,5 +25,8 @@ album_id BIGINT NOT NULL,
   image_size int(4)
 );
 
-ALTER TABLE `album_art`
-ADD UNIQUE KEY `album_art_unique` (`album_id`, `image_size`);
+ALTER TABLE albums 
+ADD FOREIGN KEY album_category_fkey (category_id)
+REFERENCES categories(category_id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION;

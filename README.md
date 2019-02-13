@@ -1,6 +1,6 @@
 # weecare-challenge
 ----
-
+This is a simple API that gets albums from https://itunes.apple.com/us/rss/topalbums/limit=100/json. It uses the Flight Framework for PHP for routing. The API allows to get album info (with limits and ordering), refresh the database with the latest list of albums, and delete records. 
 
 #API Documentation
 ---- 
@@ -84,5 +84,5 @@ This will delete an album based on its album id
 
 **Success Response:**
 Code: 200 <br />
-Content: none`
+Content: none
 			

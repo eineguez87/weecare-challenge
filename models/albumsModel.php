@@ -53,19 +53,10 @@ class AlbumsModel
 
         while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
 			//Lets get album art.
-			$art_sql = "SELECT album_image, image_size FROM album_art WHERE album_id = " . $row['album_id'];
-        
-			$art_result = $this->db->query($art_sql);
-			while ($art = $art_result->fetch(PDO::FETCH_ASSOC)) {
-				unset($art['album_id']);
-				$row['art'][] = $art;
-			}
+			$row['art'] = $this->getAlbumArt($row['album_id']);
 			
 			//lets get category info as well
-			$cat_sql = "SELECT * FROM categories WHERE category_id = " . $row['category_id'] .' LIMIT 1';
-			$cat_result = $this->db->query($cat_sql);
-			$cat = $cat_result->fetch(PDO::FETCH_ASSOC);
-			$row['category'] = $cat;
+			$row['category'] = $this->getAlbumCategory($row['category_id']);
 			
             $results[] = $row;
         }
@@ -94,10 +85,8 @@ class AlbumsModel
 		$images_sql = "INSERT IGNORE INTO album_art (album_id, album_image, image_size) VALUES (:album_id, :album_image, :image_size)";
 
 		//Lets delete whatever is in these tables before adding to them.
-		$this->db->query("TRUNCATE TABLE albums");
-		$this->db->query("TRUNCATE TABLE categories");
-		$this->db->query("TRUNCATE TABLE album_art");
-
+		$this->purgeTables();
+        
         foreach($albums['feed']['entry'] as $rank=>$album) {
 			
 			//Insterts categories
@@ -168,5 +157,67 @@ class AlbumsModel
 		];
 		
 		$stmt->execute($data);
+	}
+	
+	/**
+	 * Method to purge our tables of data. Used when loading in album data for the first time or refreshing. 
+	 * 
+	 */
+	private function purgeTables()
+	{
+		$this->db->query("TRUNCATE TABLE albums");
+		$this->db->query("TRUNCATE TABLE categories");
+		$this->db->query("TRUNCATE TABLE album_art");
+	}
+	
+	
+    /**
+     * Method to get album art.
+     * @album_id int Album id of album to get art.
+     * @return array
+     */
+    private function getAlbumArt($album_id)
+    {
+		$art_sql = "SELECT album_image, image_size FROM album_art WHERE album_id = :album_id";
+        $stmt= $this->db->prepare($art_sql);
+			
+		$data = [
+			'album_id' => $album_id,
+		];
+			
+		$stmt->execute($data);
+		
+		
+		$results = [];
+		while ($art = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			$results[] = $art;
+		}
+		
+		return $results;
+	}
+	
+	    /**
+     * Method to get category info for album.
+     * @category_id int.
+     * @return array
+     */
+    private function getAlbumCategory($category_id)
+    {
+		//Albums can only have one category. 
+		$cat_sql = "SELECT * FROM categories WHERE category_id = :category_id LIMIT 1";
+        $stmt= $this->db->prepare($cat_sql);
+			
+		$data = [
+			'category_id' => $category_id,
+		];
+			
+		$stmt->execute($data);
+		
+		$results = [];
+		while ($category = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			$results[] = $category;
+		}
+		
+		return $results;
 	}
 }

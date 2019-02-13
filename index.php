@@ -10,7 +10,7 @@ Flight::register('db', 'PDO', array('mysql:host=localhost;port=3306;dbname=weeca
 Flight::register('albums', 'albums');
 Flight::register('albumsModel', 'albumsodel');
 
-Flight::route('GET /albums/(@id)', function($id){
+Flight::route('GET /albums(/@id)', function($id){
 	
 	$request = Flight::request();
 	$params = [];
